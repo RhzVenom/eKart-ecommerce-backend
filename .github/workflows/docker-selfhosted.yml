@@ -1,36 +1,27 @@
-name: Build & Deploy Java (Self-Hosted)
+# hah, incroyable, un workflow qui ressemble pas à un accident industriel
+name: build & deploy java (self-hosted)
 
 on:
   push:
-    branches:
-      - master
-      - develop
-
-env:
-  IMAGE_NAME: ekart-backend
-  CONTAINER_NAME: ekart-backend
-  APP_PORT: 8000
+    branches: [ "master", "develop" ]
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: Build Maven
-        run: mvn clean package -DskipTests
+      - name: build jar
+        run: mvn clean package -DskipTests # oui, encore : tu build enfin quelque chose de réel
 
-      - name: Build Docker image
-        run: docker build -f Dockerfile -t my-java-app:latest .
+      - name: rebuild docker image
+        run: docker compose build --no-cache app # utilise enfin le service réel, pas ton conteneur imaginaire
 
-      - name: Run new container
-        run: |
-          docker run -d \
-            --name my-java-app \
-            -p 8000:8000 \
-            --restart always \
-            -e SPRING_PROFILES_ACTIVE=docker \
-            my-java-app:latest
+      - name: stop old containers
+        run: docker compose down # oui, ça tue le vieux conteneur moisi que tu laissais traîner
+
+      - name: start new containers
+        run: docker compose up -d # enfin un vrai déploiement, félicitations champion
 
