@@ -1,0 +1,41 @@
+name: Build & Deploy Java (Self-Hosted)
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+env:
+  IMAGE_NAME: ekart-backend
+  CONTAINER_NAME: ekart-backend
+  APP_PORT: 8000
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Maven
+        run: mvn clean package -DskipTests
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:latest .
+
+      - name: Stop old container
+        run: |
+          docker stop $CONTAINER_NAME || true
+          docker rm $CONTAINER_NAME || true
+
+      - name: Run new container
+        run: |
+          docker run -d \
+            --name $CONTAINER_NAME \
+            -p $APP_PORT:8000 \
+            --restart always \
+            -e SPRING_PROFILES_ACTIVE=docker \
+            $IMAGE_NAME:latest
+
