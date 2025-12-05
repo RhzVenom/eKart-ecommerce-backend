@@ -23,19 +23,14 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:latest .
-
-      - name: Stop old container
-        run: |
-          docker stop $CONTAINER_NAME || true
-          docker rm $CONTAINER_NAME || true
+        run: docker build -f Dockerfile -t my-java-app:latest .
 
       - name: Run new container
         run: |
           docker run -d \
-            --name $CONTAINER_NAME \
-            -p $APP_PORT:8000 \
+            --name my-java-app \
+            -p 8000:8000 \
             --restart always \
             -e SPRING_PROFILES_ACTIVE=docker \
-            $IMAGE_NAME:latest
+            my-java-app:latest
 
